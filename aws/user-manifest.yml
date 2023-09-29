@@ -24,12 +24,12 @@ spec:
             - name: SPRING_DATASOURCE_USERNAME # Name of the environment variable
               valueFrom: # Get the value of environment variable from kubernetes secrets
                 configMapKeyRef:
-                  name: mysql-configmap
+                  name: configmap
                   key: mysql-username
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 configMapKeyRef:
-                  name: mysql-configmap
+                  name: configmap
                   key: mysql-password
             - name: SPRING_DATASOURCE_URL
               valueFrom:
