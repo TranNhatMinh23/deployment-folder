@@ -1,15 +1,29 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: trannhatminh23082001@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: aws-ingress
-  #namespace: argocd
+  name: ingress-service
   annotations:
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   rules:
-    - http:
+    - host: minhtn36.io.vn  
+      http:
         paths:
           - path: /
             pathType: Prefix
@@ -18,7 +32,13 @@ spec:
                 name: angular-service
                 port:
                   number: 80
-
+          - path: /eureka
+            pathType: Prefix
+            backend:
+              service:
+                name: eureka-service
+                port:
+                  number: 8761
           - path: /restaurant
             pathType: Prefix
             backend:
@@ -51,6 +71,19 @@ spec:
                 name: user-service
                 port:
                   number: 9093
+  tls:
+    - hosts:
+        - minhtn36.io.vn
+      secretName: tls-minhtn36
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tls-minhtn36
+data:
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ3pqQ0NBYllDQVFBd2NERUxNQWtHQTFVRUJoTUNRVlV4RXpBUkJnTlZCQWdNQ2xOdmJXVXRVM1JoZEdVeApJVEFmQmdOVkJBb01HRWx1ZEdWeWJtVjBJRmRwWkdkcGRITWdVSFI1SUV4MFpERXBNQ2NHQ1NxR1NJYjNEUUVKCkFSWWFkSEpoYm01b1lYUnRhVzVvY1hRM05FQm5iV0ZwYkM1amIyMHdnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUEKQTRJQkR3QXdnZ0VLQW9JQkFRRFNwdUZ0UjV4blRoUzJXQ3I5QWp3N1BySFBFRmZJWStIUzFBaWlYVFFYMG5EVApEM1NhcUx5WllZZlhna0VrdzVzZEdPWXdQUGZ1eDUvU0lNRm5DRWllaXRvaWozWkhsUjYxY1gvZ3pvNC9DeTBHClJXYUROVEdUNXZPUzRLRDRwbUpwVDNIT09RUGRDQjBhR25mRmhUV1FVRnBXVVZzalZIUDNqY2MvSktyT3RNelgKVWVUM056NFN2M1FDTTlDdktESngvR1V6NTJDVExiTFVwOHJnQ3NQam5LaG8yMUVUUkIrM0tUSkxiWjNLdnF5LwpvcnF0azVtRElOdmdYcHRUMFdJWEZITnRsdlU3ei83QWJzOWpxd2x1ekZuaS9SNTUyM1ZRbUp3TDhBdHhXVHh3Ck1HWGVPb2xaZUFaVFNidVpoWUNCWHU2ejlMWmVFRWJqc0JaY2hZVkhBZ01CQUFHZ0dUQVhCZ2txaGtpRzl3MEIKQ1FjeENnd0ljMkZzWVhCdFlYQXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBRk5ubHdVZmhTTWthMVlBaGpRcwpnSEdsMnpjMnRDM1EvLzFPL1hMdndQZlcxcmVnMHlHVUFtYngxajB0K1N4ZzhSaU03Q01IUk5MZmUvQWtZaVZ2CnRtakhCNWZ3cHVHN3RtT3JQTEVqVDZDblE4czFHTGUzbjk2aithZ1hscC9weUIyUDJpVDdCRUFrdlRxVmk1Q0UKa3dNRnBBVW54ay8raE9VeWl5bHMva1lya0tSK3RsSVBSTllWOEZOdi83eU5jdVhyNEVOSFA0b2dmdTZibis1KwpWcVBTbzk3Rkd2S3dNRHROSmVxT3JWSUhnWVVyelpqRlNXWGpFSEkyMU9xaFBVSEZzZmpEdjNqN3k3bW13VGdXCmozRUxNVURtZVhxUDFTUSt2UTVIbnVva21BSWFMZDRRazBULzRlZ0FIaUo0V3pQWDVpYldKZDlxdGQwSjE2djYKbG5ZPQotLS0tLUVORCBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KCg==
+  tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2Z0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktnd2dnU2tBZ0VBQW9JQkFRRFNwdUZ0UjV4blRoUzIKV0NyOUFqdzdQckhQRUZmSVkrSFMxQWlpWFRRWDBuRFREM1NhcUx5WllZZlhna0VrdzVzZEdPWXdQUGZ1eDUvUwpJTUZuQ0VpZWl0b2lqM1pIbFI2MWNYL2d6bzQvQ3kwR1JXYUROVEdUNXZPUzRLRDRwbUpwVDNIT09RUGRDQjBhCkduZkZoVFdRVUZwV1VWc2pWSFAzamNjL0pLck90TXpYVWVUM056NFN2M1FDTTlDdktESngvR1V6NTJDVExiTFUKcDhyZ0NzUGpuS2hvMjFFVFJCKzNLVEpMYlozS3ZxeS9vcnF0azVtRElOdmdYcHRUMFdJWEZITnRsdlU3ei83QQpiczlqcXdsdXpGbmkvUjU1MjNWUW1Kd0w4QXR4V1R4d01HWGVPb2xaZUFaVFNidVpoWUNCWHU2ejlMWmVFRWJqCnNCWmNoWVZIQWdNQkFBRUNnZ0VBUXowZllabGxGQmg1UmdiNG1jLzMxOVZZUGtieUxqV3JwSGNuMW1PM3VBN2wKRW9teFo1aUtzczdONUgxZ085THdGU2FZZXpkSzBINEp4ckhMNmc1YjE3ZHNqM0dKaUtuUnBvcjNEWlFCRmFDRQptNmJWWlBZNndBSU5KNG5wOTlSc1B6OHJqVzduaThzR053blJ4MHVRNEdLMW95M08wSVVwaXhCSFZDRnBJQmRECmpXb3NKUnI0eXRnbnZNbjEvSXpMUzdSS0s5ZCtBNWx5WjFGZW5zTFFRMlVOTkd6dE9JdkI1Q0EwU3o3Z1N2RlEKN0Z4VEpxMi9USmh1NU1HUE5vWjhoQkE1U0Z6TTBMdERDY2dIVm41V2RoUjY4aUU0OTJtREovaGExRWZPV1BTQwpDYjlweDE2R21JWmRRbGVlRWpZK3RtVmhGVE9CT1pQTXhiV3dRdStBNFFLQmdRRHpaeXNqMEZOcEVxajRSS3pnCmY5WUtxdmRyMjN0VWVFbEkwT0NlaVk3bEF1Z3prb2hLV1RLVW5RMG1KQTBjL3RSdklHZjd3V3NuMS85Und1OVcKZEc5d0F2cEQvemVqdzhKNWlHWmF2TUIvSXlkbjFjMXNvUzAzMWZkekNFU05xU1g5b2J1cW9oTE5udnN1YWZsMQpnWEhOSXFRZFNveWZQd0pWeGxIZ0ZnSTBNUUtCZ1FEZGpjdGVjSHhtZ2pNUVBzai8vVnR1OVRqRDhFVnpqNjdaCmlpTmxxRkw3OXRPbnR6UEpyZlFZR3gvR1cxa3FpUTJZMVZkcGs2NUpxK3JoU3p3WGFKaGFsT0h2eWJ6aXBuZ3AKanVJTmFKZjVJSVQ2K2tDbnEwd2w4S2ZiVHozMDJHZVdBbEJSWHBhYmE1M0hFMi9xVm9qQlJzUnJNZytGWWJ5OQpsbjJzNlg5Szl3S0JnUUN6MXBoVFA4dEJLUjViUVRLU05TSEtoQU9IVjRWS0pnM1BsVFZCTGRXOGMyZHBJMjA3CnNhZmpraDV5L2RRS2htWWpMVWhuQk1QTmpwUUFyd3p6VGRoQVpKTFF4ck12ZHFZcjhaSGVuUE9GZkUzVE5HOHgKUWUwTkFqUndjNzFqQllVaVh1c3Y2Y3dHek40OXJ1TTM1TXBXaksvQlRLR1Z6NUpFR2VISXRib3ZJUUtCZ1FDMQpaeEFJOTFra0paN2h3a2FaTXp6V0VQcTFrOW1KMFM5ODl0b2N0a0djQkhFd2RaUjFvWFNtK0M2QUh2TlhISGlCCmxzekhxUitmT3FCS2IydDRUeS9QbXUrVGdqNmg1V09sdzFQYlhyUndTdXdYQXloRklNQnNvQ3NRS2tXMFlDd1EKYXp5UUl6NTFheHY0a0RXbVRjd1RWSG9tdXdweVQ2QldLdzRqc2R1RDZRS0JnSFJjSGlDSnhLRzUrdWp2TVhVawpnbTBEckhqTHpJMlM5NEFRbE9TZXM4VTU3SThsTE1qbjZNU1RyYUpnRmc3SlBLMXViWCtmdDNLeHM4bmJZcS9uCm1LRnlJaFhDMmtla0xwZ2x2NTZQT21za2ZUTW5wQ0t4MDFhbHdmSUV3U3BCZ21TaCt6Sk15UEZGNmxEQUwvL3gKUlVFZ3ZIVDNJT3haQkxjdVJRQ2FnWXZmCi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0KCg==
+type: kubernetes.io/tls
 
 
          

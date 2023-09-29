@@ -16,20 +16,20 @@ spec:
     spec:
       containers:
         - name: restaurantapp
-          image: 0914818516/restaurant-listing-service:latest
+          image: codedecode25/restaurant-listing-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 9091
           env:
-            - name: SPRING_DATASOURCE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: secret
+            - name: SPRING_DATASOURCE_USERNAME # Name of the environment variable
+              valueFrom: # Get the value of environment variable from kubernetes secrets
+                configMapKeyRef:
+                  name: mysql-configmap
                   key: mysql-username
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
-                secretKeyRef:
-                  name: secret
+                configMapKeyRef:
+                  name: mysql-configmap
                   key: mysql-password
             - name: SPRING_DATASOURCE_URL
               valueFrom:
